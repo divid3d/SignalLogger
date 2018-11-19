@@ -30,23 +30,44 @@
                 android:textSize="18sp"
                 android:id="@+id/tv_time"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/product_sans_bold"
                 android:gravity="left"
                 android:text="00:00" />
 
-            <TextView
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:id="@+id/tv_samples_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <LinearLayout
                 android:layout_weight="1"
-                android:fontFamily="@font/product_sans_bold"
-                android:gravity="right"
-                android:text="0" />
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="end">
+
+
+                <TextView
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:id="@+id/tv_acc_samples_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/product_sans_bold"
+                    android:gravity="left"
+                    android:text="0" />
+                <TextView
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:id="@+id/tv_gyro_samples_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/product_sans_bold"
+                    android:gravity="left"
+                    android:text="0" />
+            </LinearLayout>
+
         </LinearLayout>
 
 
@@ -158,7 +179,8 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="8dp"
                 android:max="190"
-                android:progress="100" />
+                android:progress="40"
+                />
 
             <LinearLayout
                 android:id="@+id/frequencies"

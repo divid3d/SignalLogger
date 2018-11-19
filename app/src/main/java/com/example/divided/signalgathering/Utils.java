@@ -16,20 +16,20 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
-    public static boolean saveAsCsv(Context context, ILineDataSet dataSet, String filename) {
+    public static boolean saveAsCsv(Context context, ILineDataSet dataSetX,ILineDataSet dataSetY, ILineDataSet dataSetZ, ILineDataSet dataSetSum, String filename) {
         File directory = new File(Environment.getExternalStorageDirectory() + File.separator + "Acceleration signals");
 
         if (!directory.exists()) {
             directory.mkdir();
         }
         File newFile = new File(directory, filename + ".csv");
-        try (CSVWriter writer = new CSVWriter(new FileWriter(newFile))) {
-            final float timeStampOffset = dataSet.getEntryForIndex(0).getX();
+
+        try (CSVWriter writer = new CSVWriter(new FileWriter(newFile),';',CSVWriter.NO_ESCAPE_CHARACTER,CSVWriter.DEFAULT_ESCAPE_CHARACTER)) {
+            final float timeStampOffset = dataSetX.getEntryForIndex(0).getX();
             List<String[]> data = new ArrayList<>();
-            for (int i = 0; i < dataSet.getEntryCount(); i++) {
-                Entry currentEntry = dataSet.getEntryForIndex(i);
-                data.add(new String[]{String.format("%f", currentEntry.getX() - timeStampOffset)
-                        , String.format("%f", currentEntry.getY())});
+            for (int i = 0; i < dataSetX.getEntryCount(); i++) {
+                data.add(new String[]{String.format("%f", dataSetX.getEntryForIndex(i).getX() - timeStampOffset)
+                        , String.format("%f", dataSetX.getEntryForIndex(i).getY()),String.format("%f", dataSetY.getEntryForIndex(i).getY()),String.format("%f", dataSetZ.getEntryForIndex(i).getY()),String.format("%f", dataSetSum.getEntryForIndex(i).getY())});
             }
             writer.writeAll(data);
         } catch (IOException e) {

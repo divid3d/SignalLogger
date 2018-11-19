@@ -59,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView yAxisGyroTextView;
     TextView zAxisGyroTextView;
     TextView textViewSetFrequency;
-    TextView textViewSamplesCount;
+    TextView textViewAccSamplesCount;
+    TextView textViewGyroSampelsCount;
     TextView textViewTimeFromStart;
     EditText saveFileDialogEditText;
     LineChart accelerationChartX;
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SoundPool soundPool;
     BluetoothSPP bt;
     int soundId;
-    private float SAMPLE_PERIOD_MS = 50;
+    private float SAMPLE_PERIOD_MS = 33.333f;
     private SensorManager sensorManager;
     private Sensor sensorAccelerometer;
     private Sensor sensorGyroscope;
@@ -98,8 +99,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (accelerationTimePeriod >= SAMPLE_PERIOD_MS) {
                 new ChartDrawTask(accelerometerListener, accelerationChartX, accelerationChartY, accelerationChartZ, accelerationChartSum).execute(accelerationTimePeriod, event.values[0] / g, event.values[1] / g, event.values[2] / g, currentSensorMeasurementTime);
                 previousAccelerationPoint.setTimeStamp(currentSensorMeasurementTime);
+                textViewMeasuredFrequency.setText("Measured: " + String.format("%.7f", accelerationTimePeriod) + "ms");
             }
-        } else if (mySensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        }
+        if (mySensor.getType() == Sensor.TYPE_GYROSCOPE) {
             if (gyroscopeTimePeriod >= SAMPLE_PERIOD_MS) {
                 new ChartDrawTask(gyroscopeListener, gyroscopeChartX, gyroscopeChartY, gyroscopeChartZ, gyroscopeChartSum).execute(gyroscopeTimePeriod, event.values[0] * radToDegreesConst, event.values[1] * radToDegreesConst, event.values[2] * radToDegreesConst, currentSensorMeasurementTime);
                 previousGyroscopePoint.setTimeStamp(currentSensorMeasurementTime);
@@ -107,9 +110,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
 
-               /* final float frequency = (1000.0f /timePeriod); // Current sampling frequency in Hz
-
-                textViewMeasuredFrequency.setText("Measured: " + String.format("%.1f", frequency) + "Hz");
+               /*
 
 
                 ChartPoint chartPointX = new ChartPoint(event.values[0] / g, currentSensorMeasurementTime);
@@ -156,13 +157,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometerListener = new OnSensorMeasurement() {
             @Override
             public void onMeasurement(float x, float y, float z, float sum, float measuredFrequency) {
-                textViewMeasuredFrequency.setText("Measured: " + String.format("%.1f", measuredFrequency) + "Hz");
+                //textViewMeasuredFrequency.setText("Measured: " + String.format("%.7f", measuredFrequency) + "Hz");
                 xAxisAccelerometerTextView.setText("X: " + String.format("%.3f", x));
                 yAxisAccelerometerTextView.setText("Y: " + String.format("%.3f", y));
                 zAxisAccelerometerTextView.setText("Z: " + String.format("%.3f", z));
                 accSamplesCount++;
-                textViewSamplesCount.setText(String.format("%d Samples", accSamplesCount));
+                textViewAccSamplesCount.setText(String.format("Accel: %d Samples", accSamplesCount));
                 textViewTimeFromStart.setText(Utils.getTime(stopWatch.getTime()));
+                if(bt!=null){
+                    if(bt.isServiceAvailable()){
+                        bt.send("params_"+accSamplesCount+"_"+gyroSamplesCount+"_"+Utils.getTime(stopWatch.getTime()),true);
+                    }
+                }
             }
         };
 
@@ -172,6 +178,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 xAxisGyroTextView.setText("X: " + String.format("%.3f", x));
                 yAxisGyroTextView.setText("Y: " + String.format("%.3f", y));
                 zAxisGyroTextView.setText("Z: " + String.format("%.3f", z));
+                gyroSamplesCount++;
+                textViewGyroSampelsCount.setText(String.format("Gyro: %d Samples", gyroSamplesCount));
+                if(bt!=null){
+                    if(bt.isServiceAvailable()){
+                        bt.send("params_"+accSamplesCount+"_"+gyroSamplesCount+"_"+Utils.getTime(stopWatch.getTime()),true);
+                    }
+                }
             }
         };
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -200,7 +213,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        textViewSamplesCount = findViewById(R.id.tv_samples_count);
+        textViewAccSamplesCount = findViewById(R.id.tv_acc_samples_count);
+        textViewGyroSampelsCount = findViewById(R.id.tv_gyro_samples_count);
         textViewTimeFromStart = findViewById(R.id.tv_time);
 
         xAxisAccelerometerTextView = findViewById(R.id.text_view_axis_x_accelerometer);
@@ -254,6 +268,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensorAccelerometer = sensorManager != null ? sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) : null;
         sensorGyroscope = sensorManager != null ? sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) : null;
+
+        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(this, sensorGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
         stopWatch.start();
 
 
@@ -373,8 +390,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 accSamplesCount = 0;
                 gyroSamplesCount = 0;
 
-                textViewSamplesCount.setText("0 Samples");
+                textViewAccSamplesCount.setText(String.format("Accel: %d Samples",accSamplesCount));
+                textViewGyroSampelsCount.setText(String.format("Gyro: %d Samples", gyroSamplesCount));
                 textViewTimeFromStart.setText(Utils.getTime(0));
+                if(bt!=null){
+                    if(bt.isServiceAvailable()){
+                        bt.send("params_"+0+"_"+0+"_"+Utils.getTime(0),true);
+                    }
+                }
                 if(stopWatch.isStarted()) {
                     stopWatch.reset();
                     stopWatch.start();
@@ -457,14 +480,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (!filename.isEmpty()) {
                     filename = filename + "_";
                 }
-                Utils.saveAsCsv(MainActivity.this, accelerationChartX.getData().getDataSetByIndex(0), filename + "Axis_X_accel" + date);
-                Utils.saveAsCsv(MainActivity.this, accelerationChartY.getData().getDataSetByIndex(0), filename + "Axis_Y_accel" + date);
-                Utils.saveAsCsv(MainActivity.this, accelerationChartZ.getData().getDataSetByIndex(0), filename + "Axis_Z_accel" + date);
-                Utils.saveAsCsv(MainActivity.this, accelerationChartSum.getData().getDataSetByIndex(0), filename + "Axis_Sum_accel" + date);
-                Utils.saveAsCsv(MainActivity.this, gyroscopeChartX.getData().getDataSetByIndex(0), filename + "Axis_X_gyro" + date);
-                Utils.saveAsCsv(MainActivity.this, gyroscopeChartY.getData().getDataSetByIndex(0), filename + "Axis_Y_gyro" + date);
-                Utils.saveAsCsv(MainActivity.this, gyroscopeChartZ.getData().getDataSetByIndex(0), filename + "Axis_Z_gyro" + date);
-                Utils.saveAsCsv(MainActivity.this, gyroscopeChartSum.getData().getDataSetByIndex(0), filename + "Axis_Sum_gyro" + date);
+                Utils.saveAsCsv(MainActivity.this, accelerationChartX.getData().getDataSetByIndex(0),accelerationChartY.getData().getDataSetByIndex(0),accelerationChartZ.getData().getDataSetByIndex(0),accelerationChartSum.getData().getDataSetByIndex(0), filename + "accel_" + date);
+
+                Utils.saveAsCsv(MainActivity.this, gyroscopeChartX.getData().getDataSetByIndex(0),gyroscopeChartY.getData().getDataSetByIndex(0),gyroscopeChartZ.getData().getDataSetByIndex(0),gyroscopeChartSum.getData().getDataSetByIndex(0), filename + "gyro_" + date);
                 break;
 
             case AlertDialog.BUTTON_NEGATIVE:
