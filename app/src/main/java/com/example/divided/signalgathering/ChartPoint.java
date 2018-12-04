@@ -17,7 +17,7 @@ public class ChartPoint {
         return timeStamp;
     }
 
-    public void setTimeStamp(float timeStamp){
+    public void setTimeStamp(long timeStamp){
         this.timeStamp = timeStamp;
     }
 }
